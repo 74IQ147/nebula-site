@@ -1,0 +1,1027 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Nebula Admin</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0b10;
+    --bg-card: #12141c;
+    --bg-elevated: #181b26;
+    --border: #252836;
+    --border-glow: #3b2a6b;
+    --accent: #8b5cf6;
+    --accent-soft: rgba(139, 92, 246, 0.15);
+    --accent-hover: #a78bfa;
+    --text: #e8e6f0;
+    --text-muted: #8b8799;
+    --success: #34d399;
+    --danger: #f87171;
+    --warning: #fbbf24;
+    --info: #38bdf8;
+    --radius: 12px;
+    --shadow: 0 8px 32px rgba(0, 0, 0, 0.45);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Inter', system-ui, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    line-height: 1.5;
+  }
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background:
+      radial-gradient(ellipse 80% 50% at 50% -20%, rgba(139, 92, 246, 0.16), transparent),
+      radial-gradient(ellipse 50% 30% at 100% 80%, rgba(99, 102, 241, 0.06), transparent);
+    pointer-events: none;
+    z-index: 0;
+  }
+  .top {
+    position: relative;
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 24px;
+    background: rgba(18, 20, 28, 0.8);
+    backdrop-filter: blur(16px);
+    border-bottom: 1px solid var(--border);
+  }
+  .logo { font-weight: 700; font-size: 1.1rem; letter-spacing: 0.06em; }
+  .logo span { color: var(--accent); }
+  .top-right {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 0.85rem;
+    color: var(--text-muted);
+  }
+  .top-right .who {
+    font-weight: 600;
+    color: var(--accent-hover);
+    font-family: 'JetBrains Mono', monospace;
+  }
+  .btn-logout {
+    padding: 7px 12px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--danger);
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .btn-logout:hover { background: rgba(248, 113, 113, 0.12); }
+  .btn-back {
+    padding: 7px 12px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--text-muted);
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    text-decoration: none;
+  }
+  .btn-back:hover { color: var(--text); background: var(--accent-soft); }
+
+  #gate {
+    position: relative;
+    z-index: 1;
+    max-width: 420px;
+    margin: 80px auto;
+    padding: 0 16px;
+    text-align: center;
+  }
+  #gate .card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 28px;
+    box-shadow: var(--shadow);
+  }
+  #gate h2 { margin-bottom: 8px; }
+  #gate p { color: var(--text-muted); font-size: 0.9rem; margin-bottom: 16px; }
+
+  #app {
+    position: relative;
+    z-index: 1;
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 20px 16px 48px;
+  }
+  .tabs { display: flex; gap: 6px; margin-bottom: 18px; flex-wrap: wrap; }
+  .tab {
+    padding: 9px 16px;
+    border-radius: 9px;
+    border: 1px solid var(--border);
+    background: var(--bg-card);
+    color: var(--text-muted);
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .tab:hover { color: var(--text); border-color: var(--border-glow); }
+  .tab.active {
+    background: var(--accent-soft);
+    color: var(--accent-hover);
+    border-color: var(--accent);
+  }
+  .panel { display: none; }
+  .panel.active { display: block; }
+  .card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 20px;
+    margin-bottom: 16px;
+    box-shadow: var(--shadow);
+  }
+  .card-title {
+    font-size: 0.95rem;
+    font-weight: 600;
+    margin-bottom: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+  }
+  .row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+  input, select {
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 11px 14px;
+    color: var(--text);
+    font-size: 0.88rem;
+    font-family: inherit;
+    outline: none;
+  }
+  input:focus, select:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-soft);
+  }
+  input::placeholder { color: var(--text-muted); }
+  select { cursor: pointer; min-width: 120px; }
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 11px 16px;
+    border-radius: 10px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    border: none;
+    cursor: pointer;
+    font-family: inherit;
+    white-space: nowrap;
+  }
+  .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+  .btn-primary {
+    background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+    color: #fff;
+    box-shadow: 0 4px 14px rgba(139, 92, 246, 0.3);
+  }
+  .btn-ghost {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text);
+  }
+  .btn-ghost:hover:not(:disabled) {
+    border-color: var(--border-glow);
+    background: var(--bg-elevated);
+  }
+  .btn-danger {
+    background: rgba(248, 113, 113, 0.15);
+    border: 1px solid rgba(248, 113, 113, 0.3);
+    color: var(--danger);
+  }
+  .btn-sm { padding: 6px 10px; font-size: 0.75rem; border-radius: 7px; }
+  .msg { margin-top: 10px; font-size: 0.82rem; min-height: 1.2em; }
+  .msg.ok { color: var(--success); }
+  .msg.err { color: var(--danger); }
+  .table-wrap {
+    overflow-x: auto;
+    margin-top: 12px;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+  }
+  table { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
+  th {
+    text-align: left;
+    padding: 10px 12px;
+    color: var(--text-muted);
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    background: var(--bg-elevated);
+    border-bottom: 1px solid var(--border);
+    white-space: nowrap;
+  }
+  td {
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--border);
+    vertical-align: middle;
+  }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: rgba(139, 92, 246, 0.04); }
+  td.mono {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.75rem;
+    max-width: 140px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .badge {
+    display: inline-flex;
+    padding: 3px 8px;
+    border-radius: 20px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+  }
+  .badge.ok {
+    background: rgba(52, 211, 153, 0.12);
+    color: var(--success);
+    border: 1px solid rgba(52, 211, 153, 0.25);
+  }
+  .badge.bad {
+    background: rgba(248, 113, 113, 0.12);
+    color: var(--danger);
+    border: 1px solid rgba(248, 113, 113, 0.25);
+  }
+  .badge.ban {
+    background: rgba(248, 113, 113, 0.2);
+    color: #fca5a5;
+    border: 1px solid rgba(248, 113, 113, 0.4);
+  }
+  .role-badge {
+    display: inline-flex;
+    padding: 3px 8px;
+    border-radius: 20px;
+    font-size: 0.68rem;
+    font-weight: 700;
+    text-transform: uppercase;
+  }
+  .role-badge.owner {
+    background: rgba(251, 191, 36, 0.15);
+    color: #fbbf24;
+    border: 1px solid rgba(251, 191, 36, 0.35);
+  }
+  .role-badge.admin {
+    background: rgba(248, 113, 113, 0.12);
+    color: #f87171;
+    border: 1px solid rgba(248, 113, 113, 0.3);
+  }
+  .role-badge.koder {
+    background: rgba(56, 189, 248, 0.12);
+    color: #38bdf8;
+    border: 1px solid rgba(56, 189, 248, 0.3);
+  }
+  .role-badge.media {
+    background: rgba(239, 68, 68, 0.15);
+    color: #ef4444;
+    border: 1px solid rgba(239, 68, 68, 0.4);
+  }
+  .role-badge.beta {
+    background: rgba(167, 139, 250, 0.15);
+    color: #a78bfa;
+    border: 1px solid rgba(167, 139, 250, 0.35);
+  }
+  .role-badge.user {
+    background: rgba(148, 163, 184, 0.12);
+    color: #94a3b8;
+    border: 1px solid rgba(148, 163, 184, 0.25);
+  }
+  .actions-cell { display: flex; gap: 5px; flex-wrap: wrap; }
+  .key-list { display: grid; gap: 8px; margin-top: 12px; }
+  .key-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 12px 14px;
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    flex-wrap: wrap;
+  }
+  .key-code {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.85rem;
+    color: var(--accent-hover);
+  }
+  .key-meta { font-size: 0.75rem; color: var(--text-muted); }
+  .hidden { display: none !important; }
+  .stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+  .stat {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px;
+    text-align: center;
+  }
+  .stat .num { font-size: 1.5rem; font-weight: 700; color: var(--accent-hover); }
+  .stat .label { font-size: 0.75rem; color: var(--text-muted); margin-top: 2px; }
+
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+    background: rgba(0, 0, 0, 0.65);
+    backdrop-filter: blur(6px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.2s, visibility 0.2s;
+  }
+  .modal-overlay.open { opacity: 1; visibility: visible; }
+  .modal {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    box-shadow: var(--shadow);
+    width: 100%;
+    max-width: 400px;
+    padding: 24px;
+  }
+  .modal h3 { font-size: 1.05rem; font-weight: 600; margin-bottom: 6px; }
+  .modal .modal-sub { font-size: 0.82rem; color: var(--text-muted); margin-bottom: 18px; }
+  .modal label {
+    display: block;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+  .modal input, .modal select { width: 100%; margin-bottom: 16px; }
+  .modal-actions { display: flex; gap: 10px; justify-content: flex-end; }
+  .role-pick {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-bottom: 16px;
+  }
+  .role-pick button {
+    padding: 12px;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    background: var(--bg-elevated);
+    color: var(--text);
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    text-transform: uppercase;
+  }
+  .role-pick button.active {
+    border-color: var(--accent);
+    background: var(--accent-soft);
+    color: var(--accent-hover);
+  }
+  .role-pick button:disabled { opacity: 0.35; cursor: not-allowed; }
+
+  #toastWrap {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 2000;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    pointer-events: none;
+  }
+  .toast {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--accent);
+    border-radius: 10px;
+    padding: 12px 16px;
+    font-size: 0.85rem;
+    box-shadow: var(--shadow);
+    min-width: 220px;
+    max-width: 340px;
+    pointer-events: auto;
+  }
+  .toast.ok { border-left-color: var(--success); }
+  .toast.err { border-left-color: var(--danger); }
+  .toast.warn { border-left-color: var(--warning); }
+</style>
+</head>
+<body>
+<div id="toastWrap"></div>
+
+<header class="top">
+  <div class="logo">NEBULA <span>ADMIN</span></div>
+  <div class="top-right">
+    <a class="btn-back" href="/cabinet">← Кабинет</a>
+    <span id="who" class="who"></span>
+    <button class="btn-logout hidden" id="logoutBtn" onclick="doLogout()">Выйти</button>
+  </div>
+</header>
+
+<!-- Нет доступа -->
+<div id="gate" class="hidden">
+  <div class="card">
+    <h2 id="gateTitle">Проверка доступа...</h2>
+    <p id="gateText">Секунду</p>
+    <a class="btn btn-primary" href="/cabinet" style="display:inline-flex;text-decoration:none">В кабинет</a>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app" class="hidden">
+  <div class="stats" id="stats"></div>
+  <div class="tabs">
+    <button class="tab active" data-tab="users" onclick="switchTab('users')">Пользователи</button>
+    <button class="tab" data-tab="keys" onclick="switchTab('keys')">Ключи</button>
+    <button class="tab" data-tab="promos" onclick="switchTab('promos')">Промокоды</button>
+    <button class="tab" data-tab="create" onclick="switchTab('create')">Создать</button>
+  </div>
+
+  <div class="panel active" id="panel-users">
+    <div class="card">
+      <div class="card-title">
+        <span>Список пользователей</span>
+        <button class="btn btn-ghost btn-sm" onclick="loadUsers()">Обновить</button>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Логин</th><th>Роль</th><th>HWID</th><th>До</th><th>Дней</th><th>Статус</th><th>Действия</th>
+            </tr>
+          </thead>
+          <tbody id="tbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel" id="panel-keys">
+    <div class="card">
+      <div class="card-title">Создать ключи</div>
+      <div class="row">
+        <input id="k_days" type="number" placeholder="Дней" value="30" style="max-width:100px">
+        <input id="k_count" type="number" placeholder="Кол-во" value="1" min="1" max="50" style="max-width:90px">
+        <select id="k_role">
+          <option value="user">user</option>
+          <option value="beta">beta</option>
+        </select>
+        <button class="btn btn-primary" onclick="createKeys()">Сгенерировать</button>
+      </div>
+      <div class="msg" id="k_msg"></div>
+    </div>
+    <div class="card">
+      <div class="card-title">
+        <span>Неиспользованные ключи</span>
+        <button class="btn btn-ghost btn-sm" onclick="loadKeys()">Обновить</button>
+      </div>
+      <div class="key-list" id="keyList"><div class="key-meta">Загрузка...</div></div>
+    </div>
+  </div>
+
+  <div class="panel" id="panel-promos">
+    <div class="card">
+      <div class="card-title">Создать промокод</div>
+      <div class="row" style="margin-bottom:10px">
+        <input id="p_code" placeholder="КОД (WELCOME30)" style="flex:1;min-width:140px;text-transform:uppercase">
+        <input id="p_days" type="number" placeholder="Дней" value="7" style="max-width:90px">
+        <input id="p_max" type="number" placeholder="Макс. исп." value="100" min="1" style="max-width:100px">
+        <select id="p_role">
+          <option value="user">user</option>
+          <option value="beta">beta</option>
+        </select>
+      </div>
+      <div class="row">
+        <input id="p_expires" type="date" style="max-width:160px">
+        <button class="btn btn-primary" onclick="createPromo()">Создать промокод</button>
+      </div>
+      <div class="msg" id="p_msg"></div>
+    </div>
+    <div class="card">
+      <div class="card-title">
+        <span>Все промокоды</span>
+        <button class="btn btn-ghost btn-sm" onclick="loadPromos()">Обновить</button>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Код</th><th>Дней</th><th>Исп.</th><th>Роль</th><th>До</th><th>Статус</th><th>Действия</th>
+            </tr>
+          </thead>
+          <tbody id="promoBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel" id="panel-create">
+    <div class="card">
+      <div class="card-title">Создать / обновить пользователя</div>
+      <div class="row" style="margin-bottom:10px">
+        <input id="n_login" placeholder="логин (a-z0-9_)" style="flex:1;min-width:140px">
+        <input id="n_pass" placeholder="пароль" style="flex:1;min-width:140px">
+      </div>
+      <div class="row">
+        <input id="n_days" type="number" placeholder="дней (0 = навсегда)" value="30" style="max-width:140px">
+        <select id="n_role">
+          <option value="user">user</option>
+          <option value="beta">beta</option>
+          <option value="media">media</option>
+          <option value="koder">koder</option>
+          <option value="admin">admin</option>
+          <option value="owner">owner</option>
+        </select>
+        <button class="btn btn-primary" onclick="createUser()">Создать / обновить</button>
+      </div>
+      <div class="msg" id="c_err"></div>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal" onclick="if(event.target===this)closeModal()">
+  <div class="modal">
+    <h3 id="modalTitle">Действие</h3>
+    <p class="modal-sub" id="modalSub"></p>
+    <div id="modalBody"></div>
+    <div class="modal-actions" id="modalActions"></div>
+  </div>
+</div>
+
+<script>
+let token = localStorage.getItem('nebula_token') || '';
+let myRole = 'user';
+let myLogin = '';
+let modalState = {};
+
+const ROLES = {
+  owner: { label: 'Owner', level: 100 },
+  admin: { label: 'Admin', level: 80 },
+  koder: { label: 'Koder', level: 60 },
+  media: { label: 'Media', level: 30 },
+  beta:  { label: 'Beta',  level: 20 },
+  user:  { label: 'User',  level: 10 }
+};
+
+function hdr() {
+  return {
+    'Authorization': 'Bearer ' + token,
+    'Content-Type': 'application/json'
+  };
+}
+
+function toast(text, type) {
+  const wrap = document.getElementById('toastWrap');
+  const el = document.createElement('div');
+  el.className = 'toast ' + (type || 'ok');
+  el.textContent = text;
+  wrap.appendChild(el);
+  setTimeout(() => el.remove(), 3200);
+}
+
+function switchTab(name) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.tab === name));
+  document.querySelectorAll('.panel').forEach(p => p.classList.toggle('active', p.id === 'panel-' + name));
+  if (name === 'keys') loadKeys();
+  if (name === 'users') loadUsers();
+  if (name === 'promos') loadPromos();
+}
+
+function showGate(title, text) {
+  document.getElementById('app').classList.add('hidden');
+  document.getElementById('gate').classList.remove('hidden');
+  document.getElementById('gateTitle').textContent = title;
+  document.getElementById('gateText').textContent = text;
+}
+
+function showApp() {
+  document.getElementById('gate').classList.add('hidden');
+  document.getElementById('app').classList.remove('hidden');
+  document.getElementById('logoutBtn').classList.remove('hidden');
+  document.getElementById('who').textContent = myLogin + ' · ' + (ROLES[myRole]?.label || myRole);
+}
+
+// Авто-вход по токену из кабинета
+async function boot() {
+  token = localStorage.getItem('nebula_token') || '';
+  if (!token) {
+    showGate('Нет сессии', 'Сначала войди в кабинет, затем нажми «Админ».');
+    return;
+  }
+
+  try {
+    // Проверяем роль через verify
+    const vr = await fetch('/api/verify', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ token, hwid: 'browser' })
+    });
+    const vj = await vr.json().catch(() => ({}));
+    if (!vr.ok) {
+      showGate('Сессия истекла', vj.error || 'Войди заново в кабинет');
+      return;
+    }
+
+    myLogin = vj.login || '';
+    myRole = String(vj.role || 'user').toLowerCase();
+    if (['katrek', '74iq'].includes(myLogin.toLowerCase())) myRole = 'owner';
+
+    if (!['owner', 'admin', 'koder'].includes(myRole) && !vj.is_admin) {
+      showGate('Нет доступа', 'Только owner / admin / koder');
+      return;
+    }
+
+    // Пробуем admin API
+    const r = await fetch('/api/admin/users', { headers: hdr() });
+    if (!r.ok) {
+      const j = await r.json().catch(() => ({}));
+      showGate('Нет доступа', j.error || 'Admin API отклонил запрос');
+      return;
+    }
+    const arr = await r.json();
+    showApp();
+    updateRoleSelects();
+    renderStats(arr);
+    renderUsers(arr);
+  } catch (e) {
+    showGate('Ошибка', 'Не удалось связаться с сервером');
+  }
+}
+
+function doLogout() {
+  localStorage.removeItem('nebula_token');
+  localStorage.removeItem('nebula_login');
+  location.href = '/login';
+}
+
+function updateRoleSelects() {
+  const level = ROLES[myRole]?.level || 0;
+  const nRole = document.getElementById('n_role');
+  [...nRole.options].forEach(opt => {
+    const rLevel = ROLES[opt.value]?.level || 0;
+    opt.disabled = rLevel > level;
+    if (opt.disabled && nRole.value === opt.value) nRole.value = 'user';
+  });
+}
+
+function fmt(d) {
+  if (!d) return '—';
+  return new Date(d).toLocaleString('ru-RU');
+}
+function daysLeft(d) {
+  if (!d) return '—';
+  return Math.ceil((new Date(d) - Date.now()) / 86400000);
+}
+function esc(s) {
+  return String(s || '').replace(/'/g, "\\'").replace(/"/g, '&quot;').replace(/</g, '&lt;');
+}
+
+function renderStats(arr) {
+  if (!Array.isArray(arr)) return;
+  const total = arr.length;
+  const active = arr.filter(u => !u.is_banned && u.valid_until && new Date(u.valid_until) > new Date()).length;
+  const banned = arr.filter(u => u.is_banned).length;
+  const admins = arr.filter(u => ['owner', 'admin', 'koder'].includes(String(u.role || '').toLowerCase())).length;
+  document.getElementById('stats').innerHTML = `
+    <div class="stat"><div class="num">${total}</div><div class="label">Всего</div></div>
+    <div class="stat"><div class="num">${active}</div><div class="label">Активных</div></div>
+    <div class="stat"><div class="num">${banned}</div><div class="label">Забанено</div></div>
+    <div class="stat"><div class="num">${admins}</div><div class="label">Staff</div></div>
+  `;
+}
+
+function loadUsers() {
+  fetch('/api/admin/users', { headers: hdr() })
+    .then(r => r.json())
+    .then(arr => { renderStats(arr); renderUsers(arr); })
+    .catch(() => {});
+}
+
+function renderUsers(arr) {
+  const tb = document.getElementById('tbody');
+  tb.innerHTML = '';
+  if (!Array.isArray(arr)) return;
+  const myLevel = ROLES[myRole]?.level || 0;
+
+  arr.forEach(u => {
+    const role = String(u.role || 'user').toLowerCase();
+    const roleInfo = ROLES[role] || ROLES.user;
+    const dl = daysLeft(u.valid_until);
+    const ok = !u.is_banned && u.valid_until && new Date(u.valid_until) > new Date();
+    const hwidShort = u.hwid ? (u.hwid.length > 14 ? u.hwid.slice(0, 12) + '…' : u.hwid) : '—';
+    const canManage = myLevel >= (roleInfo.level || 0);
+
+    let statusBadge;
+    if (u.is_banned) statusBadge = '<span class="badge ban">BAN</span>';
+    else if (ok) statusBadge = '<span class="badge ok">OK</span>';
+    else statusBadge = '<span class="badge bad">NO SUB</span>';
+
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td><b>${esc(u.login)}</b></td>
+      <td><span class="role-badge ${role}">${roleInfo.label}</span></td>
+      <td class="mono" title="${esc(u.hwid || '')}">${esc(hwidShort)}</td>
+      <td>${fmt(u.valid_until)}</td>
+      <td>${dl}</td>
+      <td>${statusBadge}</td>
+      <td>
+        <div class="actions-cell">
+          <button class="btn btn-ghost btn-sm" onclick="extendPrompt('${esc(u.login)}')">+дней</button>
+          <button class="btn btn-danger btn-sm" onclick="reducePrompt('${esc(u.login)}')">−дней</button>
+          <button class="btn btn-ghost btn-sm" onclick="resetHwid('${esc(u.login)}')">HWID</button>
+          ${canManage ? `<button class="btn btn-ghost btn-sm" onclick="setRolePrompt('${esc(u.login)}','${role}')">роль</button>` : ''}
+          <button class="btn btn-sm ${u.is_banned ? 'btn-ghost' : 'btn-danger'}" onclick="toggleBan('${esc(u.login)}',${!u.is_banned})">${u.is_banned ? 'unban' : 'ban'}</button>
+          ${canManage ? `<button class="btn btn-danger btn-sm" onclick="delUser('${esc(u.login)}')">del</button>` : ''}
+        </div>
+      </td>`;
+    tb.appendChild(tr);
+  });
+}
+
+function createUser() {
+  const login = document.getElementById('n_login').value.trim();
+  const password = document.getElementById('n_pass').value.trim();
+  const days = document.getElementById('n_days').value.trim();
+  const role = document.getElementById('n_role').value;
+  const msg = document.getElementById('c_err');
+  if (!login) { msg.className = 'msg err'; msg.textContent = 'Введи логин'; return; }
+
+  fetch('/api/admin/users', {
+    method: 'POST', headers: hdr(),
+    body: JSON.stringify({ login, password, days, role })
+  })
+    .then(r => r.json().then(j => { if (!r.ok) throw new Error(j.error || 'Ошибка'); return j; }))
+    .then(() => {
+      msg.className = 'msg ok';
+      msg.textContent = 'OK';
+      toast('Сохранён: ' + login, 'ok');
+      document.getElementById('n_login').value = '';
+      document.getElementById('n_pass').value = '';
+      loadUsers();
+    })
+    .catch(e => { msg.className = 'msg err'; msg.textContent = e.message; toast(e.message, 'err'); });
+}
+
+function openModal(title, sub, bodyHtml, actionsHtml) {
+  document.getElementById('modalTitle').textContent = title;
+  document.getElementById('modalSub').textContent = sub || '';
+  document.getElementById('modalBody').innerHTML = bodyHtml || '';
+  document.getElementById('modalActions').innerHTML = actionsHtml || '';
+  document.getElementById('modal').classList.add('open');
+}
+function closeModal() {
+  document.getElementById('modal').classList.remove('open');
+  modalState = {};
+}
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+
+function extendPrompt(login) {
+  modalState = { login };
+  openModal('Продлить подписку', 'Пользователь: ' + login,
+    `<label>Дней</label><input type="number" id="modalInput" value="30" min="1">`,
+    `<button class="btn btn-ghost" onclick="closeModal()">Отмена</button>
+     <button class="btn btn-primary" onclick="confirmExtend()">Добавить</button>`);
+}
+function confirmExtend() {
+  const days = parseInt(document.getElementById('modalInput').value, 10);
+  const login = modalState.login;
+  closeModal();
+  if (!days || days <= 0) return toast('Некорректно', 'err');
+  fetch('/api/admin/users/' + encodeURIComponent(login) + '/extend', {
+    method: 'POST', headers: hdr(), body: JSON.stringify({ days })
+  }).then(r => r.json().then(j => { if (!r.ok) throw new Error(j.error || 'Ошибка'); }))
+    .then(() => { toast('+' + days + ' дн. ' + login, 'ok'); loadUsers(); })
+    .catch(e => toast(e.message, 'err'));
+}
+
+function reducePrompt(login) {
+  modalState = { login };
+  openModal('Списать дни', 'Пользователь: ' + login,
+    `<label>Дней списать</label><input type="number" id="modalInput" value="30" min="1">`,
+    `<button class="btn btn-ghost" onclick="closeModal()">Отмена</button>
+     <button class="btn btn-danger" onclick="confirmReduce()">Списать</button>`);
+}
+function confirmReduce() {
+  const days = parseInt(document.getElementById('modalInput').value, 10);
+  const login = modalState.login;
+  closeModal();
+  if (!days || days <= 0) return toast('Некорректно', 'err');
+  fetch('/api/admin/users/' + encodeURIComponent(login) + '/reduce', {
+    method: 'POST', headers: hdr(), body: JSON.stringify({ days })
+  }).then(r => r.json().then(j => { if (!r.ok) throw new Error(j.error || 'Ошибка'); return j; }))
+    .then(j => { toast(j.message || ('−' + days + ' дн.'), 'ok'); loadUsers(); })
+    .catch(e => toast(e.message, 'err'));
+}
+
+function resetHwid(login) {
+  modalState = { login };
+  openModal('Сброс HWID', 'Сбросить HWID для «' + login + '»?', '',
+    `<button class="btn btn-ghost" onclick="closeModal()">Отмена</button>
+     <button class="btn btn-primary" onclick="confirmResetHwid()">Сбросить</button>`);
+}
+function confirmResetHwid() {
+  const login = modalState.login;
+  closeModal();
+  fetch('/api/admin/users/' + encodeURIComponent(login) + '/reset_hwid', {
+    method: 'POST', headers: hdr()
+  }).then(() => { toast('HWID сброшен: ' + login, 'ok'); loadUsers(); });
+}
+
+function setRolePrompt(login, currentRole) {
+  const myLevel = ROLES[myRole]?.level || 0;
+  modalState = { login, role: currentRole };
+  const buttons = Object.keys(ROLES).map(r => {
+    const disabled = ROLES[r].level > myLevel ? 'disabled' : '';
+    const active = r === currentRole ? 'active' : '';
+    return `<button type="button" class="${active}" data-role="${r}" ${disabled} onclick="pickRole('${r}')">${ROLES[r].label}</button>`;
+  }).join('');
+  openModal('Сменить роль', 'Пользователь: ' + login,
+    `<div class="role-pick" id="rolePick">${buttons}</div>`,
+    `<button class="btn btn-ghost" onclick="closeModal()">Отмена</button>
+     <button class="btn btn-primary" onclick="confirmRole()">Сохранить</button>`);
+}
+function pickRole(role) {
+  modalState.role = role;
+  document.querySelectorAll('#rolePick button').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.role === role);
+  });
+}
+function confirmRole() {
+  const { login, role } = modalState;
+  closeModal();
+  if (!role || !ROLES[role]) return;
+  fetch('/api/admin/users/' + encodeURIComponent(login) + '/role', {
+    method: 'POST', headers: hdr(), body: JSON.stringify({ role })
+  }).then(r => r.json().then(j => { if (!r.ok) throw new Error(j.error || 'Ошибка'); }))
+    .then(() => { toast(login + ' → ' + ROLES[role].label, 'ok'); loadUsers(); })
+    .catch(e => toast(e.message, 'err'));
+}
+
+function toggleBan(login, banned) {
+  modalState = { login, banned };
+  openModal(banned ? 'Забанить' : 'Разбанить', (banned ? 'Забанить' : 'Разбанить') + ' «' + login + '»?', '',
+    `<button class="btn btn-ghost" onclick="closeModal()">Отмена</button>
+     <button class="btn ${banned ? 'btn-danger' : 'btn-primary'}" onclick="confirmBan()">${banned ? 'Ban' : 'Unban'}</button>`);
+}
+function confirmBan() {
+  const { login, banned } = modalState;
+  closeModal();
+  fetch('/api/admin/users/' + encodeURIComponent(login) + '/ban', {
+    method: 'POST', headers: hdr(), body: JSON.stringify({ banned })
+  }).then(() => { toast((banned ? 'Ban: ' : 'Unban: ') + login, banned ? 'warn' : 'ok'); loadUsers(); });
+}
+
+function delUser(login) {
+  modalState = { login };
+  openModal('Удалить', 'Удалить «' + login + '» навсегда?', '',
+    `<button class="btn btn-ghost" onclick="closeModal()">Отмена</button>
+     <button class="btn btn-danger" onclick="confirmDel()">Удалить</button>`);
+}
+function confirmDel() {
+  const login = modalState.login;
+  closeModal();
+  fetch('/api/admin/users/' + encodeURIComponent(login), {
+    method: 'DELETE', headers: hdr()
+  }).then(() => { toast('Удалён: ' + login, 'warn'); loadUsers(); });
+}
+
+function createKeys() {
+  const days = parseInt(document.getElementById('k_days').value, 10) || 30;
+  const count = Math.min(50, Math.max(1, parseInt(document.getElementById('k_count').value, 10) || 1));
+  const role = document.getElementById('k_role').value;
+  const msg = document.getElementById('k_msg');
+  msg.className = 'msg'; msg.textContent = 'Генерация...';
+  fetch('/api/admin/keys', {
+    method: 'POST', headers: hdr(), body: JSON.stringify({ days, count, role })
+  })
+    .then(r => r.json().then(j => { if (!r.ok) throw new Error(j.error || 'Ошибка'); return j; }))
+    .then(j => {
+      const keys = j.keys || [];
+      msg.className = 'msg ok';
+      msg.textContent = 'Создано: ' + keys.length;
+      toast('Ключей: ' + keys.length, 'ok');
+      const list = document.getElementById('keyList');
+      list.innerHTML = keys.map(k => {
+        const code = k.key || k;
+        return `<div class="key-item">
+          <span class="key-code">${esc(code)}</span>
+          <span class="key-meta">${days} дн. · ${role}</span>
+          <button class="btn btn-ghost btn-sm" onclick="copyKey('${esc(code)}')">Копировать</button>
+        </div>`;
+      }).join('') + list.innerHTML;
+    })
+    .catch(e => { msg.className = 'msg err'; msg.textContent = e.message; toast(e.message, 'err'); });
+}
+
+function loadKeys() {
+  const list = document.getElementById('keyList');
+  fetch('/api/admin/keys', { headers: hdr() })
+    .then(r => { if (!r.ok) throw new Error('Нет доступа'); return r.json(); })
+    .then(arr => {
+      if (!arr.length) { list.innerHTML = '<div class="key-meta">Нет ключей</div>'; return; }
+      list.innerHTML = arr.map(k => {
+        const code = k.key || k;
+        return `<div class="key-item">
+          <span class="key-code">${esc(String(code))}</span>
+          <span class="key-meta">${k.days != null ? k.days + ' дн.' : ''} · ${k.role || 'user'}</span>
+          <button class="btn btn-ghost btn-sm" onclick="copyKey('${esc(String(code))}')">Копировать</button>
+        </div>`;
+      }).join('');
+    })
+    .catch(e => { list.innerHTML = '<div class="key-meta" style="color:var(--danger)">' + e.message + '</div>'; });
+}
+
+function copyKey(code) {
+  navigator.clipboard.writeText(code).then(() => toast('Скопировано', 'ok')).catch(() => prompt('Код:', code));
+}
+
+function createPromo() {
+  const code = document.getElementById('p_code').value.trim();
+  const days = parseInt(document.getElementById('p_days').value, 10) || 7;
+  const max_uses = parseInt(document.getElementById('p_max').value, 10) || 1;
+  const role = document.getElementById('p_role').value;
+  const expires = document.getElementById('p_expires').value;
+  const msg = document.getElementById('p_msg');
+  if (!code) { msg.className = 'msg err'; msg.textContent = 'Введи код'; return; }
+  const body = { code, days, max_uses, role };
+  if (expires) body.expires_at = expires;
+  fetch('/api/admin/promos', { method: 'POST', headers: hdr(), body: JSON.stringify(body) })
+    .then(r => r.json().then(j => { if (!r.ok) throw new Error(j.error || 'Ошибка'); return j; }))
+    .then(() => {
+      msg.className = 'msg ok';
+      msg.textContent = 'Создан: ' + code.toUpperCase();
+      toast('Промокод создан', 'ok');
+      document.getElementById('p_code').value = '';
+      loadPromos();
+    })
+    .catch(e => { msg.className = 'msg err'; msg.textContent = e.message; toast(e.message, 'err'); });
+}
+
+function loadPromos() {
+  const tb = document.getElementById('promoBody');
+  fetch('/api/admin/promos', { headers: hdr() })
+    .then(r => { if (!r.ok) throw new Error('Нет доступа / нет таблицы promos'); return r.json(); })
+    .then(arr => {
+      if (!arr.length) { tb.innerHTML = '<tr><td colspan="7" style="color:var(--text-muted)">Нет промокодов</td></tr>'; return; }
+      tb.innerHTML = arr.map(p => {
+        const active = p.active !== false;
+        return `<tr>
+          <td><b class="key-code">${esc(p.code)}</b></td>
+          <td>${p.days}</td>
+          <td>${p.used_count || 0} / ${p.max_uses || 1}</td>
+          <td>${esc(p.role || 'user')}</td>
+          <td>${p.expires_at ? new Date(p.expires_at).toLocaleDateString('ru-RU') : '—'}</td>
+          <td>${active ? '<span class="badge ok">ON</span>' : '<span class="badge bad">OFF</span>'}</td>
+          <td><div class="actions-cell">
+            <button class="btn btn-ghost btn-sm" onclick="copyKey('${esc(p.code)}')">копир.</button>
+            <button class="btn btn-ghost btn-sm" onclick="togglePromo('${esc(p.code)}')">${active ? 'выкл' : 'вкл'}</button>
+            <button class="btn btn-danger btn-sm" onclick="delPromo('${esc(p.code)}')">del</button>
+          </div></td>
+        </tr>`;
+      }).join('');
+    })
+    .catch(e => { tb.innerHTML = '<tr><td colspan="7" style="color:var(--danger)">' + e.message + '</td></tr>'; });
+}
+
+function togglePromo(code) {
+  fetch('/api/admin/promos/' + encodeURIComponent(code) + '/toggle', { method: 'POST', headers: hdr() })
+    .then(() => { toast('OK', 'ok'); loadPromos(); });
+}
+function delPromo(code) {
+  modalState = { code };
+  openModal('Удалить промокод', 'Удалить «' + code + '»?', '',
+    `<button class="btn btn-ghost" onclick="closeModal()">Отмена</button>
+     <button class="btn btn-danger" onclick="confirmDelPromo()">Удалить</button>`);
+}
+function confirmDelPromo() {
+  const code = modalState.code;
+  closeModal();
+  fetch('/api/admin/promos/' + encodeURIComponent(code), { method: 'DELETE', headers: hdr() })
+    .then(() => { toast('Удалён: ' + code, 'warn'); loadPromos(); });
+}
+
+boot();
+</script>
+</body>
+</html>

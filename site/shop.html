@@ -1,0 +1,770 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Магазин подписок — NEBULA CLIENT</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <style>
+    /* Shop-specific refinements */
+    .shop-container {
+      max-width: 1040px;
+      margin: 0 auto;
+      padding: 48px 24px 80px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .shop-header {
+      text-align: center;
+      margin-bottom: 48px;
+    }
+
+    .shop-header h1 {
+      font-size: clamp(2.2rem, 5vw, 3.2rem);
+      font-weight: 800;
+      color: #fff;
+      margin: 12px 0;
+    }
+
+    .shop-header p {
+      color: var(--text-muted);
+      font-size: 1.05rem;
+      max-width: 580px;
+      margin: 0 auto;
+    }
+
+    /* Plans Grid */
+    .plans-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 24px;
+      align-items: stretch;
+    }
+
+    @media (max-width: 860px) {
+      .plans-grid {
+        grid-template-columns: 1fr;
+        max-width: 420px;
+        margin: 0 auto;
+      }
+    }
+
+    .plan-card {
+      background: var(--bg-card);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 32px 28px;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      box-shadow: var(--shadow);
+    }
+
+    .plan-card:hover {
+      border-color: rgba(139, 92, 246, 0.4);
+      transform: translateY(-4px);
+      box-shadow: var(--shadow-lg), 0 0 35px rgba(139, 92, 246, 0.15);
+    }
+
+    .plan-card.featured {
+      background: linear-gradient(180deg, rgba(28, 22, 54, 0.9) 0%, rgba(18, 15, 36, 0.9) 100%);
+      border-color: rgba(139, 92, 246, 0.5);
+      box-shadow: 0 16px 40px rgba(0, 0, 0, 0.5), 0 0 35px rgba(139, 92, 246, 0.25);
+    }
+
+    .plan-badge-top {
+      position: absolute;
+      top: -12px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--accent-gradient);
+      color: #fff;
+      font-size: 0.72rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      padding: 4px 14px;
+      border-radius: var(--radius-full);
+      box-shadow: 0 4px 14px rgba(139, 92, 246, 0.5);
+    }
+
+    .plan-title {
+      font-size: 1.35rem;
+      font-weight: 800;
+      color: #fff;
+      margin-bottom: 4px;
+    }
+
+    .plan-subtitle {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      margin-bottom: 20px;
+    }
+
+    .plan-price-block {
+      margin-bottom: 24px;
+      display: flex;
+      align-items: baseline;
+      gap: 6px;
+    }
+
+    .plan-cost {
+      font-size: 2.6rem;
+      font-weight: 900;
+      color: #fff;
+      font-family: var(--font-sans);
+    }
+
+    .plan-currency {
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: var(--accent-light);
+    }
+
+    .plan-period {
+      font-size: 0.85rem;
+      color: var(--text-dim);
+    }
+
+    .plan-perks {
+      list-style: none;
+      display: grid;
+      gap: 12px;
+      margin-bottom: 32px;
+      flex-grow: 1;
+    }
+
+    .plan-perks li {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 0.9rem;
+      color: #dfdded;
+    }
+
+    .plan-perks li svg {
+      color: var(--emerald);
+      flex-shrink: 0;
+    }
+
+    /* Modal Styling */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 1000;
+      background: rgba(4, 5, 10, 0.82);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.25s ease;
+    }
+
+    .modal-overlay.open {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    .modal-dialog {
+      background: #0f101d;
+      border: 1px solid rgba(139, 92, 246, 0.35);
+      border-radius: 20px;
+      box-shadow: var(--shadow-lg), 0 0 60px rgba(139, 92, 246, 0.2);
+      width: 100%;
+      max-width: 680px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      transform: scale(0.94) translateY(10px);
+      transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .modal-overlay.open .modal-dialog {
+      transform: scale(1) translateY(0);
+    }
+
+    .modal-head {
+      background: linear-gradient(135deg, #1b1735, #141126);
+      border-bottom: 1px solid var(--border);
+      padding: 18px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .modal-head h3 {
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .modal-close-btn {
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s;
+    }
+
+    .modal-close-btn:hover {
+      background: rgba(255, 255, 255, 0.16);
+      color: #fff;
+    }
+
+    .modal-content-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+    }
+
+    @media (max-width: 600px) {
+      .modal-content-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .methods-column {
+      padding: 24px;
+      border-right: 1px solid var(--border);
+      display: grid;
+      gap: 10px;
+      align-content: start;
+    }
+
+    @media (max-width: 600px) {
+      .methods-column {
+        border-right: none;
+        border-bottom: 1px solid var(--border);
+      }
+    }
+
+    .method-card {
+      background: rgba(255, 255, 255, 0.03);
+      border: 2px solid var(--border);
+      border-radius: 12px;
+      padding: 14px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      transition: all 0.2s;
+      text-align: left;
+    }
+
+    .method-card:hover {
+      background: rgba(139, 92, 246, 0.08);
+      border-color: rgba(139, 92, 246, 0.4);
+    }
+
+    .method-card.active {
+      background: rgba(139, 92, 246, 0.16);
+      border-color: var(--accent);
+      box-shadow: 0 0 16px rgba(139, 92, 246, 0.3);
+    }
+
+    .method-icon {
+      font-size: 1.5rem;
+      width: 38px;
+      height: 38px;
+      border-radius: 10px;
+      background: rgba(0, 0, 0, 0.3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .method-info {
+      flex-grow: 1;
+    }
+
+    .method-title {
+      font-size: 0.92rem;
+      font-weight: 700;
+      color: #fff;
+    }
+
+    .method-desc {
+      font-size: 0.76rem;
+      color: var(--text-muted);
+    }
+
+    .checkout-column {
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .price-summary {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px;
+      margin-bottom: 20px;
+    }
+
+    .summary-line {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.88rem;
+      color: var(--text-muted);
+      margin-bottom: 8px;
+    }
+
+    .summary-total {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      padding-top: 10px;
+      border-top: 1px solid var(--border);
+      margin-top: 10px;
+    }
+
+    .total-title {
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: #fff;
+    }
+
+    .total-val {
+      font-size: 1.6rem;
+      font-weight: 800;
+      color: var(--accent-light);
+      font-family: var(--font-sans);
+    }
+
+    .total-val.discounted {
+      display: flex;
+      align-items: baseline;
+      gap: 8px;
+    }
+
+    .old-price-strike {
+      font-size: 1rem;
+      color: var(--text-dim);
+      text-decoration: line-through;
+      font-weight: 500;
+    }
+
+    .promo-input-group {
+      display: flex;
+      gap: 8px;
+      margin-top: 8px;
+    }
+
+    .promo-input-group input {
+      flex: 1;
+      padding: 10px 12px;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: #fff;
+      font-family: var(--font-mono);
+      font-size: 0.88rem;
+      text-transform: uppercase;
+      outline: none;
+    }
+
+    .promo-input-group input:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.2);
+    }
+
+    .promo-status {
+      font-size: 0.8rem;
+      margin-top: 6px;
+      min-height: 1.2em;
+    }
+  </style>
+</head>
+<body>
+
+<!-- Navigation Header -->
+<header class="top">
+  <a href="/" class="logo">
+    <div class="logo-icon">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+        <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+      </svg>
+    </div>
+    NEBULA <span>CLIENT</span>
+  </a>
+
+  <nav class="nav">
+    <a href="/">Главная</a>
+    <a href="/shop" class="active">Магазин</a>
+    <a href="/profile">Личный кабинет</a>
+  </nav>
+
+  <div class="nav-actions">
+    <a href="/profile" class="btn btn-secondary btn-sm" id="cabinetLink">Кабинет</a>
+  </div>
+</header>
+
+<!-- Main Container -->
+<main class="shop-container">
+  <div class="shop-header">
+    <div class="badge badge-emerald">ОФИЦИАЛЬНЫЙ МАГАЗИН</div>
+    <h1>Тарифы и лицензии</h1>
+    <p>Выберите подходящий срок доступа. Мгновенная активация ключа в личном кабинете после оплаты.</p>
+  </div>
+
+  <div class="plans-grid">
+    <!-- Plan 1: 30 days -->
+    <div class="plan-card" data-id="30" data-name="30 Дней" data-price="199">
+      <div class="plan-title">30 Дней</div>
+      <div class="plan-subtitle">Пробный период для ознакомления</div>
+      <div class="plan-price-block">
+        <span class="plan-cost">199</span>
+        <span class="plan-currency">₽</span>
+        <span class="plan-period">/ 30 дней</span>
+      </div>
+
+      <ul class="plan-perks">
+        <li>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+          Полный доступ ко всем модулям
+        </li>
+        <li>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+          1 HWID аппаратная привязка
+        </li>
+        <li>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+          Автообновления клиента
+        </li>
+        <li>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+          Базовая поддержка
+        </li>
+      </ul>
+
+      <button class="btn btn-secondary" onclick="openPay('30', '30 Дней', 199)">
+        Купить подписку
+      </button>
+    </div>
+
+    <!-- Plan 2: 365 days (Featured) -->
+    <div class="plan-card featured" data-id="365" data-name="365 Дней" data-price="399">
+      <div class="plan-badge-top">Хит продаж · Выгодно</div>
+      <div class="plan-title">365 Дней</div>
+      <div class="plan-subtitle">Максимальная выгода для постоянных игроков</div>
+      <div class="plan-price-block">
+        <span class="plan-cost">399</span>
+        <span class="plan-currency">₽</span>
+        <span class="plan-period">/ 1 год (1.09 ₽/день)</span>
+      </div>
+
+      <ul class="plan-perks">
+        <li>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+          Полный доступ ко всем модулям
+        </li>
+        <li>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+          1 HWID + бесплатные сбросы
+        </li>
+        <li>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+          Приоритетные обновления обходов
+        </li>
+        <li>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+          VIP поддержка 24/7
+        </li>
+        <li>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+          Готовые приватные конфиги
+        </li>
+      </ul>
+
+      <button class="btn btn-primary btn-glow" onclick="openPay('365', '365 Дней', 399)">
+        Купить со скидкой
+      </button>
+    </div>
+
+    <!-- Plan 3: Lifetime -->
+    <div class="plan-card" data-id="life" data-name="Навсегда" data-price="699">
+      <div class="plan-title">Навсегда</div>
+      <div class="plan-subtitle">Единоразовая оплата навсегда</div>
+      <div class="plan-price-block">
+        <span class="plan-cost">699</span>
+        <span class="plan-currency">₽</span>
+        <span class="plan-period">/ lifetime</span>
+      </div>
+
+      <ul class="plan-perks">
+        <li>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+          Вечная лицензия без продлений
+        </li>
+        <li>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+          Все будущие версии и обходы
+        </li>
+        <li>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+          Роль Beta-тестера в Discord
+        </li>
+        <li>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+          Личный контакт с разработчиком
+        </li>
+      </ul>
+
+      <button class="btn btn-secondary" onclick="openPay('life', 'Навсегда', 699)">
+        Купить навсегда
+      </button>
+    </div>
+  </div>
+
+  <div style="text-align: center; margin-top: 48px; color: var(--text-muted); font-size: 0.9rem;">
+    После покупки вы получаете лицензионный ключ вида <code style="font-family: var(--font-mono); color: var(--accent-light);">NEBULA-XXXX-XXXX-XXXX</code>. <br>
+    Активируйте его в <a href="/profile" style="font-weight: 600; text-decoration: underline;">личном кабинете</a> для немедленного доступа к лоадеру.
+  </div>
+</main>
+
+<!-- Payment Modal -->
+<div class="modal-overlay" id="payModal" onclick="if(event.target===this)closePay()">
+  <div class="modal-dialog">
+    <div class="modal-head">
+      <h3>
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect>
+          <line x1="1" y1="10" x2="23" y2="10"></line>
+        </svg>
+        Оформление заказа
+      </h3>
+      <button class="modal-close-btn" onclick="closePay()" aria-label="Закрыть">✕</button>
+    </div>
+
+    <div class="modal-content-grid">
+      <!-- Methods list -->
+      <div class="methods-column" id="payMethods">
+        <!-- Rendered by JS -->
+      </div>
+
+      <!-- Checkout summary & actions -->
+      <div class="checkout-column">
+        <div>
+          <div class="price-summary">
+            <div class="summary-line">
+              <span>Тариф:</span>
+              <strong id="payPlanName" style="color: #fff;">—</strong>
+            </div>
+            <div class="summary-line">
+              <span>Способ оплаты:</span>
+              <strong id="paySelectedMethod" style="color: var(--accent-light);">—</strong>
+            </div>
+            <div class="summary-total">
+              <span class="total-title">Итого к оплате:</span>
+              <div class="total-val" id="payFinalPrice">0 ₽</div>
+            </div>
+          </div>
+
+          <!-- Promo Code Section -->
+          <div>
+            <label style="font-size: 0.8rem; font-weight: 600; color: var(--text-muted); text-transform: uppercase;">Есть промокод?</label>
+            <div class="promo-input-group">
+              <input type="text" id="promoCode" placeholder="WELCOME30" autocomplete="off" spellcheck="false">
+              <button class="btn btn-secondary btn-sm" type="button" onclick="applyPromo()">Применить</button>
+            </div>
+            <div class="promo-status" id="promoMsg"></div>
+          </div>
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 10px; margin-top: 24px;">
+          <button class="btn btn-primary btn-glow" onclick="continuePay()" style="width: 100%; padding: 14px;">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="20 6 9 17 4 12"></polyline>
+            </svg>
+            Перейти к оплате
+          </button>
+          <button class="btn btn-ghost btn-sm" onclick="closePay()">Отмена</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Footer -->
+<footer class="site-footer">
+  <div class="footer-content">
+    <div class="footer-brand">
+      NEBULA CLIENT <span>· Быстрая оплата без комиссий</span>
+    </div>
+    <div class="footer-links">
+      <a href="https://discord.gg/fVRGX93HB" target="_blank" rel="noopener">Discord</a>
+      <a href="https://t.me/74IQ147" target="_blank" rel="noopener">Telegram Администратора</a>
+      <a href="/profile">Кабинет</a>
+    </div>
+  </div>
+</footer>
+
+<script>
+const METHODS = [
+  { id: 'sbp', label: 'СБП (Банки РФ)', desc: 'Без комиссии · Моментально', icon: '⚡' },
+  { id: 'card', label: 'Банковская карта', desc: 'МИР, Visa, Mastercard', icon: '💳' },
+  { id: 'funpay', label: 'FunPay', desc: 'Оплата через биржу FunPay', icon: '🤖' },
+  { id: 'crypto', label: 'CryptoBot (USDT)', desc: 'USDT, TON, BTC через Telegram', icon: '💎' },
+];
+
+const LOCAL_PROMOS = {
+  'WELCOME10': { type: 'percent', value: 10 },
+  'WELCOME30': { type: 'percent', value: 15 },
+  'NEBULA20':  { type: 'percent', value: 20 },
+  'MINUS50':   { type: 'fixed', value: 50 },
+};
+
+let state = {
+  planId: null,
+  planName: '',
+  basePrice: 0,
+  price: 0,
+  method: METHODS[0].id,
+  promo: null
+};
+
+function renderMethods() {
+  const box = document.getElementById('payMethods');
+  box.innerHTML = METHODS.map(m => `
+    <div class="method-card ${state.method === m.id ? 'active' : ''}" onclick="selectMethod('${m.id}')">
+      <div class="method-icon">${m.icon}</div>
+      <div class="method-info">
+        <div class="method-title">${m.label}</div>
+        <div class="method-desc">${m.desc}</div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function openPay(id, name, price) {
+  state = {
+    planId: id,
+    planName: name,
+    basePrice: price,
+    price: price,
+    method: METHODS[0].id,
+    promo: null
+  };
+  document.getElementById('payPlanName').textContent = name;
+  document.getElementById('promoCode').value = '';
+  document.getElementById('promoMsg').textContent = '';
+  document.getElementById('promoMsg').className = 'promo-status';
+  updatePriceUI();
+  renderMethods();
+  updateMethodLabel();
+  document.getElementById('payModal').classList.add('open');
+}
+
+function closePay() {
+  document.getElementById('payModal').classList.remove('open');
+}
+
+function selectMethod(id) {
+  state.method = id;
+  renderMethods();
+  updateMethodLabel();
+}
+
+function updateMethodLabel() {
+  const m = METHODS.find(x => x.id === state.method);
+  document.getElementById('paySelectedMethod').textContent = m ? m.label : '—';
+}
+
+function updatePriceUI() {
+  const el = document.getElementById('payFinalPrice');
+  if (state.promo && state.price < state.basePrice) {
+    el.className = 'total-val discounted';
+    el.innerHTML = `<span class="old-price-strike">${state.basePrice} ₽</span> ${state.price} ₽`;
+  } else {
+    el.className = 'total-val';
+    el.textContent = `${state.price} ₽`;
+  }
+}
+
+function applyPromo() {
+  const code = (document.getElementById('promoCode').value || '').trim().toUpperCase();
+  const msg = document.getElementById('promoMsg');
+  if (!code) {
+    msg.style.color = 'var(--rose)';
+    msg.textContent = 'Введите промокод';
+    return;
+  }
+  const p = LOCAL_PROMOS[code];
+  if (!p) {
+    state.promo = null;
+    state.price = state.basePrice;
+    updatePriceUI();
+    msg.style.color = 'var(--rose)';
+    msg.textContent = 'Промокод не найден';
+    return;
+  }
+  let price = state.basePrice;
+  if (p.type === 'percent') {
+    price = Math.max(1, Math.round(state.basePrice * (1 - p.value / 100)));
+  } else if (p.type === 'fixed') {
+    price = Math.max(1, state.basePrice - p.value);
+  }
+  state.promo = code;
+  state.price = price;
+  updatePriceUI();
+  msg.style.color = 'var(--emerald)';
+  msg.textContent = p.type === 'percent'
+    ? `Скидка ${p.value}% успешно применена!`
+    : `Скидка ${p.value} ₽ успешно применена!`;
+}
+
+function continuePay() {
+  const m = METHODS.find(x => x.id === state.method);
+  const user = localStorage.getItem('nebula_login') || '(укажите ваш логин)';
+  const lines = [
+    '⚡ Покупка Nebula Client',
+    'Тариф: ' + state.planName,
+    'Сумма: ' + state.price + ' ₽',
+    'Способ оплаты: ' + (m ? m.label : state.method),
+  ];
+  if (state.promo) lines.push('Промокод: ' + state.promo);
+  lines.push('', 'Мой логин на сайте: ' + user);
+  
+  const text = encodeURIComponent(lines.join('\n'));
+  window.open('https://t.me/74IQ147?text=' + text, '_blank');
+}
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') closePay();
+});
+
+// Update cabinet link if logged in
+document.addEventListener('DOMContentLoaded', () => {
+  const login = localStorage.getItem('nebula_login');
+  if (login) {
+    const link = document.getElementById('cabinetLink');
+    if (link) link.textContent = `Кабинет (${login})`;
+  }
+});
+</script>
+
+</body>
+</html>
